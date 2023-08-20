@@ -12,7 +12,9 @@
     "ant-design-vue": "^4.0.0",
     "antd": "^5.8.3",
     "echarts": "^5.4.3",
-    "vue": "^3.3.4"
+    "file-saver": "^2.0.5",
+    "vue": "^3.3.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",

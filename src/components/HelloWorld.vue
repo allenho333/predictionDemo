@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref, defineProps, h,onMounted } from 'vue'
+import { ref, defineProps, h, onMounted } from 'vue'
 import { NSpace, NButton, NInput, NDataTable, message } from 'naive-ui'
 import './index.less'
 import * as echarts from 'echarts';
+import HeatmapChart from './heatmap/index.vue'
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+
 defineProps<{ msg: string }>()
 
 const msg = ref('')
@@ -92,21 +96,71 @@ option = {
       }
     }
   ]
-};
+}
+const getComponentType = (type) => {
+  switch (type) {
+    case 1:
+      return 'Type1Component';
+    case 2:
+      return 'Type2Component';
+    // Add more cases for different types if needed
+    default:
+      return 'div'; // Fallback component
+  }
+}
 
 onMounted(() => {
-  var chartDom = document.getElementById('chart');
-  var myChart = echarts.init(chartDom);
-  option && myChart.setOption(option);
+  // var chartDom = document.getElementById('chart');
+  // var myChart = echarts.init(chartDom);
+  // option && myChart.setOption(option);
 })
+
+const downloadExcel = () => {
+  function s2ab(s) {
+    const buf = new ArrayBuffer(s.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i !== s.length; ++i) {
+      view[i] = s.charCodeAt(i) & 0xFF;
+    }
+    return buf;
+  }
+  const data = [
+    ['Name', 'Age', 'Country'],
+    ['John', 25, 'USA'],
+    ['Emily', 30, 'Canada'],
+    ['Michael', 22, 'UK'],
+    // Add more rows as needed
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+  const blob = new Blob([s2ab(XLSX.write(wb, { bookType: 'xlsx', type: 'binary' }))], {
+    type: 'application/octet-stream'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'data.xlsx';
+  link.click();
+
+  // Clean up the URL.createObjectURL after the download link is clicked
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 100);
+}
 
 </script>
 
 <template>
-  <div>单次预测</div>
+  <h1>备选库项目智能分类Demo</h1>
+
+  <h2>单次预测</h2>
   <br />
 
-  <NSpace style="display: flex; flex-direction: row; align-items:center;">
+  <NSpace style="display: flex; flex-direction:row; align-items:center;">
     <NSpace class="inputBox">
       <NInput size='large' style="min-height:300px; min-width:300px" type="textarea" placeholder="基本的 Textarea"
         v-model:value="msg" />
@@ -117,20 +171,29 @@ onMounted(() => {
     </NSpace>
   </NSpace>
   <br />
-
-  <div>多次预测</div>
+  <div>
+    ----------------------------------------------------------------------------------------------
+  </div>
+  <h2>批量有标签预测</h2>
   <br />
 
   <NSpace style="display: flex; flex-direction: row; align-items:center;">
-    <NButton type='primary'>人载批量预测模板xls文件</NButton>
-    <NButton type='primary'>点击犷上传批量预测文好</NButton>
-    <NButton type='primary'>预测鳄亦杯按钮</NButton>
+    <NButton type='primary'>人载批量预测模板xlsx文件</NButton>
+    <NButton type='primary'>点击上传批量预测并预测</NButton>
+    <!-- <NButton type='primary'>预测鳄亦杯按钮</NButton> -->
   </NSpace>
   <br />
 
   <NSpace class="displayBox2">
-    <NDataTable style="background-color: red;" :columns="columns" :data="data" :pagination="pagination" :bordered="true" />
-    <div id="chart" ></div>
+    <NDataTable style="background-color: red;" :columns="columns" :data="data" :pagination="pagination"
+      :bordered="true" />
+    <HeatmapChart :hours="hours" :days="days" :chartData="chartData"></HeatmapChart>
+    <div>
+      <button @click="downloadExcel">Download Excel</button>
+    </div>
+    <!-- <div v-for="(item, index) in items" :key="index">
+      <component :is="getComponentType(item.type)" :data="item.data" />
+    </div> -->
   </NSpace>
 </template>
 
